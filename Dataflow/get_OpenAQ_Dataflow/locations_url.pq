@@ -1,0 +1,1 @@
+"https://api.openaq.org/v3/locations?bbox=-74.25909,40.477399,-73.700272,40.917577&limit=1000" meta [IsParameterQuery = true, IsParameterQueryRequired = true, Type = type text]
