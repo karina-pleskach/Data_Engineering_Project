@@ -1,0 +1,1 @@
+base_url & "sensors/" meta [IsParameterQuery = true, IsParameterQueryRequired = false, Type = type text]

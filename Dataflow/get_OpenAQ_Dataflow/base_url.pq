@@ -1,0 +1,1 @@
+"https://api.openaq.org/v3/" meta [IsParameterQuery = true, IsParameterQueryRequired = true, Type = type text]
