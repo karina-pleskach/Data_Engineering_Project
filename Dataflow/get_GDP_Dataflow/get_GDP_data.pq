@@ -1,5 +1,5 @@
 let
-  Source = List.Numbers(1, num_of_rows{0}[number]),
+  Source = List.Numbers(1, num_of_pages{0}[number]),
   #"Converted to table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
   #"Changed column type" = Table.TransformColumnTypes(#"Converted to table", {{"Column1", type text}}),
   #"Added custom" = Table.AddColumn(#"Changed column type", "Custom", each Json.Document(Web.Contents(base_url & "&page=" & [Column1]))),
