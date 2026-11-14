@@ -7,6 +7,9 @@
         },
         "NYC_Taxi_HTTP_Connection user1fabric": {
             "type": "string"
+        },
+        "NYC_Taxi_Web_Connection user1fabric": {
+            "type": "string"
         }
     },
     "variables": {},
@@ -109,18 +112,19 @@
                                     "type": "IfCondition",
                                     "dependsOn": [
                                         {
-                                            "activity": "check_file_existence",
+                                            "activity": "pre_request",
                                             "dependencyConditions": [
-                                                "Succeeded"
+                                                "Completed"
                                             ]
                                         }
                                     ],
                                     "typeProperties": {
                                         "expression": {
-                                            "value": "@activity('check_file_existence').output.exists",
+                                            "value": "@and(\n    equals(activity('check_file_existence').output.exists, false),\n    equals(activity('pre_request').output.ADFHttpStatusCodeInResponse, '206')\n)",
                                             "type": "Expression"
                                         },
-                                        "ifFalseActivities": [
+                                        "ifFalseActivities": [],
+                                        "ifTrueActivities": [
                                             {
                                                 "name": "load_NYC_Taxi_data",
                                                 "type": "Copy",
@@ -194,8 +198,39 @@
                                                     "enableStaging": false
                                                 }
                                             }
-                                        ],
-                                        "ifTrueActivities": []
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "pre_request",
+                                    "type": "WebActivity",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "check_file_existence",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "policy": {
+                                        "timeout": "0.12:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "typeProperties": {
+                                        "method": "GET",
+                                        "headers": {
+                                            "Range": "bytes=0-0"
+                                        },
+                                        "relativeUrl": {
+                                            "value": "@concat(\n    '/yellow_tripdata_',\n    variables('for_each_year_month'),\n    '.parquet'\n)",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "externalReferences": {
+                                        "connection": "[parameters('NYC_Taxi_Web_Connection user1fabric')]"
                                     }
                                 }
                             ]
@@ -205,7 +240,7 @@
                 "parameters": {
                     "yellow_trips_start_year": {
                         "type": "int",
-                        "defaultValue": 2009
+                        "defaultValue": 2019
                     },
                     "yellow_trips_start_month": {
                         "type": "int",
@@ -242,7 +277,7 @@
                     }
                 },
                 "lastModifiedByObjectId": "1c20ea16-7932-4365-8a7b-ae3a559b1594",
-                "lastPublishTime": "2026-11-13T23:58:56Z"
+                "lastPublishTime": "2026-11-14T00:40:52Z"
             },
             "dependsOn": []
         }
