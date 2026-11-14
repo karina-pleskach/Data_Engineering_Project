@@ -1,0 +1,250 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Bronze_lakehouse": {
+            "type": "string"
+        },
+        "NYC_Taxi_HTTP_Connection user1fabric": {
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "get_NYC_Taxi_Pipeline",
+            "type": "pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "check_and_load_Yellow_Trips",
+                        "type": "ForEach",
+                        "dependsOn": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@range(\n    0,\n    add(\n        add(\n            sub(\n                mul(\n                    sub(\n                        int(formatDateTime(utcNow(), 'yyyy')),\n                        pipeline().parameters.yellow_trips_start_year\n                    ),\n                    12\n                ),\n                pipeline().parameters.yellow_trips_start_month\n            ),\n            int(formatDateTime(utcNow(), 'MM'))\n        ),\n        1\n    )\n)",
+                                "type": "Expression"
+                            },
+                            "isSequential": true,
+                            "activities": [
+                                {
+                                    "name": "set_current_year_month",
+                                    "type": "SetVariable",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "typeProperties": {
+                                        "variableName": "for_each_year_month",
+                                        "value": {
+                                            "value": "@formatDateTime(\n    addToTime(\n        concat(\n            string(pipeline().parameters.yellow_trips_start_year),\n            '-',\n            if(\n                less(pipeline().parameters.yellow_trips_start_month, 10),\n                concat('0', string(pipeline().parameters.yellow_trips_start_month)),\n                string(pipeline().parameters.yellow_trips_start_month)\n            ),\n            '-01T00:00:00Z'\n        ),\n        item(),\n        'Month'\n    ),\n    'yyyy-MM'\n)",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "check_file_existence",
+                                    "type": "GetMetadata",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "set_current_year_month",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "policy": {
+                                        "timeout": "0.12:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "typeProperties": {
+                                        "fieldList": [
+                                            "exists"
+                                        ],
+                                        "datasetSettings": {
+                                            "annotations": [],
+                                            "linkedService": {
+                                                "name": "Bronze_lakehouse",
+                                                "properties": {
+                                                    "annotations": [],
+                                                    "type": "Lakehouse",
+                                                    "typeProperties": {
+                                                        "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                                                        "artifactId": "[parameters('Bronze_lakehouse')]",
+                                                        "rootFolder": "Files"
+                                                    }
+                                                }
+                                            },
+                                            "type": "Parquet",
+                                            "typeProperties": {
+                                                "location": {
+                                                    "type": "LakehouseLocation",
+                                                    "fileName": {
+                                                        "value": "@concat('yellow_tripdata_', variables('for_each_year_month'), '.parquet')",
+                                                        "type": "Expression"
+                                                    },
+                                                    "folderPath": "/NYC_Taxi/yellow_tripdata"
+                                                },
+                                                "compressionCodec": "snappy"
+                                            },
+                                            "schema": []
+                                        },
+                                        "storeSettings": {
+                                            "type": "AzureBlobStorageReadSettings",
+                                            "recursive": true,
+                                            "enablePartitionDiscovery": false
+                                        },
+                                        "formatSettings": {
+                                            "type": "ParquetReadSettings"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "load_data_if_not_exist",
+                                    "type": "IfCondition",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "check_file_existence",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "typeProperties": {
+                                        "expression": {
+                                            "value": "@activity('check_file_existence').output.exists",
+                                            "type": "Expression"
+                                        },
+                                        "ifFalseActivities": [
+                                            {
+                                                "name": "load_NYC_Taxi_data",
+                                                "type": "Copy",
+                                                "dependsOn": [],
+                                                "policy": {
+                                                    "timeout": "0.12:00:00",
+                                                    "retry": 0,
+                                                    "retryIntervalInSeconds": 30,
+                                                    "secureOutput": false,
+                                                    "secureInput": false
+                                                },
+                                                "typeProperties": {
+                                                    "source": {
+                                                        "type": "BinarySource",
+                                                        "storeSettings": {
+                                                            "type": "HttpReadSettings",
+                                                            "requestMethod": "GET"
+                                                        },
+                                                        "formatSettings": {
+                                                            "type": "BinaryReadSettings"
+                                                        },
+                                                        "datasetSettings": {
+                                                            "annotations": [],
+                                                            "type": "Binary",
+                                                            "typeProperties": {
+                                                                "location": {
+                                                                    "type": "HttpServerLocation",
+                                                                    "relativeUrl": {
+                                                                        "value": "@concat('/trip-data/', concat('yellow_tripdata_', variables('for_each_year_month'), '.parquet'))",
+                                                                        "type": "Expression"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "externalReferences": {
+                                                                "connection": "[parameters('NYC_Taxi_HTTP_Connection user1fabric')]"
+                                                            }
+                                                        }
+                                                    },
+                                                    "sink": {
+                                                        "type": "BinarySink",
+                                                        "storeSettings": {
+                                                            "type": "AzureBlobStorageWriteSettings"
+                                                        },
+                                                        "datasetSettings": {
+                                                            "annotations": [],
+                                                            "linkedService": {
+                                                                "name": "Bronze_lakehouse",
+                                                                "properties": {
+                                                                    "annotations": [],
+                                                                    "type": "Lakehouse",
+                                                                    "typeProperties": {
+                                                                        "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                                                                        "artifactId": "[parameters('Bronze_lakehouse')]",
+                                                                        "rootFolder": "Files"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "type": "Binary",
+                                                            "typeProperties": {
+                                                                "location": {
+                                                                    "type": "LakehouseLocation",
+                                                                    "fileName": {
+                                                                        "value": "@concat('yellow_tripdata_', variables('for_each_year_month'), '.parquet')",
+                                                                        "type": "Expression"
+                                                                    },
+                                                                    "folderPath": "NYC_Taxi/yellow_tripdata"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "enableStaging": false
+                                                }
+                                            }
+                                        ],
+                                        "ifTrueActivities": []
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "parameters": {
+                    "yellow_trips_start_year": {
+                        "type": "int",
+                        "defaultValue": 2009
+                    },
+                    "yellow_trips_start_month": {
+                        "type": "int",
+                        "defaultValue": 1
+                    },
+                    "green_trips_start_year": {
+                        "type": "int",
+                        "defaultValue": 2013
+                    },
+                    "green_trips_start_month": {
+                        "type": "int",
+                        "defaultValue": 8
+                    },
+                    "FHV_trips_start_year": {
+                        "type": "int",
+                        "defaultValue": 2015
+                    },
+                    "FHV_trips_start_month": {
+                        "type": "int",
+                        "defaultValue": 1
+                    },
+                    "HVFHV_trips_start_year": {
+                        "type": "int",
+                        "defaultValue": 2019
+                    },
+                    "HVFHV_trips_start_month": {
+                        "type": "int",
+                        "defaultValue": 2
+                    }
+                },
+                "variables": {
+                    "for_each_year_month": {
+                        "type": "String"
+                    }
+                },
+                "lastModifiedByObjectId": "1c20ea16-7932-4365-8a7b-ae3a559b1594",
+                "lastPublishTime": "2026-11-13T23:58:56Z"
+            },
+            "dependsOn": []
+        }
+    ]
+}
