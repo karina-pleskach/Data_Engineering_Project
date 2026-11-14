@@ -15,18 +15,18 @@
     "variables": {},
     "resources": [
         {
-            "name": "get_NYC_Taxi_Pipeline",
+            "name": "load_NYC_Taxi_category",
             "type": "pipelines",
             "apiVersion": "2018-06-01",
             "properties": {
                 "activities": [
                     {
-                        "name": "check_and_load_Yellow_Trips",
+                        "name": "check_and_load_trips",
                         "type": "ForEach",
                         "dependsOn": [],
                         "typeProperties": {
                             "items": {
-                                "value": "@range(\n    0,\n    add(\n        add(\n            sub(\n                mul(\n                    sub(\n                        int(formatDateTime(utcNow(), 'yyyy')),\n                        pipeline().parameters.yellow_trips_start_year\n                    ),\n                    12\n                ),\n                pipeline().parameters.yellow_trips_start_month\n            ),\n            int(formatDateTime(utcNow(), 'MM'))\n        ),\n        1\n    )\n)",
+                                "value": "@range(\n    0,\n    add(\n        add(\n            sub(\n                mul(\n                    sub(\n                        int(formatDateTime(utcNow(), 'yyyy')),\n                        pipeline().parameters.start_year\n                    ),\n                    12\n                ),\n                pipeline().parameters.start_month\n            ),\n            int(formatDateTime(utcNow(), 'MM'))\n        ),\n        1\n    )\n)",
                                 "type": "Expression"
                             },
                             "isSequential": true,
@@ -42,7 +42,7 @@
                                     "typeProperties": {
                                         "variableName": "for_each_year_month",
                                         "value": {
-                                            "value": "@formatDateTime(\n    addToTime(\n        concat(\n            string(pipeline().parameters.yellow_trips_start_year),\n            '-',\n            if(\n                less(pipeline().parameters.yellow_trips_start_month, 10),\n                concat('0', string(pipeline().parameters.yellow_trips_start_month)),\n                string(pipeline().parameters.yellow_trips_start_month)\n            ),\n            '-01T00:00:00Z'\n        ),\n        item(),\n        'Month'\n    ),\n    'yyyy-MM'\n)",
+                                            "value": "@formatDateTime(\n    addToTime(\n        concat(\n            string(pipeline().parameters.start_year),\n            '-',\n            if(\n                less(pipeline().parameters.start_month, 10),\n                concat('0', string(pipeline().parameters.start_month)),\n                string(pipeline().parameters.start_month)\n            ),\n            '-01T00:00:00Z'\n        ),\n        item(),\n        'Month'\n    ),\n    'yyyy-MM'\n)",
                                             "type": "Expression"
                                         }
                                     }
@@ -88,10 +88,13 @@
                                                 "location": {
                                                     "type": "LakehouseLocation",
                                                     "fileName": {
-                                                        "value": "@concat('yellow_tripdata_', variables('for_each_year_month'), '.parquet')",
+                                                        "value": "@concat(\n    pipeline().parameters.file_name, \n    '_', \n    variables('for_each_year_month'), \n    '.parquet'\n)",
                                                         "type": "Expression"
                                                     },
-                                                    "folderPath": "/NYC_Taxi/yellow_tripdata"
+                                                    "folderPath": {
+                                                        "value": "@concat(\n    'NYC_Taxi',\n    '/',\n    pipeline().parameters.file_name\n)",
+                                                        "type": "Expression"
+                                                    }
                                                 },
                                                 "compressionCodec": "snappy"
                                             },
@@ -153,7 +156,7 @@
                                                                 "location": {
                                                                     "type": "HttpServerLocation",
                                                                     "relativeUrl": {
-                                                                        "value": "@concat('/trip-data/', concat('yellow_tripdata_', variables('for_each_year_month'), '.parquet'))",
+                                                                        "value": "@concat('/trip-data/', concat(pipeline().parameters.file_name, '_', variables('for_each_year_month'), '.parquet'))",
                                                                         "type": "Expression"
                                                                     }
                                                                 }
@@ -187,10 +190,10 @@
                                                                 "location": {
                                                                     "type": "LakehouseLocation",
                                                                     "fileName": {
-                                                                        "value": "@concat('yellow_tripdata_', variables('for_each_year_month'), '.parquet')",
+                                                                        "value": "@concat(\n    pipeline().parameters.file_name,\n    '/',\n    pipeline().parameters.file_name,\n    '_', \n    variables('for_each_year_month'), \n    '.parquet'\n)",
                                                                         "type": "Expression"
                                                                     },
-                                                                    "folderPath": "NYC_Taxi/yellow_tripdata"
+                                                                    "folderPath": "NYC_Taxi"
                                                                 }
                                                             }
                                                         }
@@ -225,7 +228,7 @@
                                             "Range": "bytes=0-0"
                                         },
                                         "relativeUrl": {
-                                            "value": "@concat(\n    '/yellow_tripdata_',\n    variables('for_each_year_month'),\n    '.parquet'\n)",
+                                            "value": "@concat(\n    pipeline().parameters.file_name,\n    '_',\n    variables('for_each_year_month'),\n    '.parquet'\n)",
                                             "type": "Expression"
                                         }
                                     },
@@ -238,37 +241,17 @@
                     }
                 ],
                 "parameters": {
-                    "yellow_trips_start_year": {
+                    "start_year": {
                         "type": "int",
                         "defaultValue": 2019
                     },
-                    "yellow_trips_start_month": {
+                    "start_month": {
                         "type": "int",
                         "defaultValue": 1
                     },
-                    "green_trips_start_year": {
-                        "type": "int",
-                        "defaultValue": 2013
-                    },
-                    "green_trips_start_month": {
-                        "type": "int",
-                        "defaultValue": 8
-                    },
-                    "FHV_trips_start_year": {
-                        "type": "int",
-                        "defaultValue": 2015
-                    },
-                    "FHV_trips_start_month": {
-                        "type": "int",
-                        "defaultValue": 1
-                    },
-                    "HVFHV_trips_start_year": {
-                        "type": "int",
-                        "defaultValue": 2019
-                    },
-                    "HVFHV_trips_start_month": {
-                        "type": "int",
-                        "defaultValue": 2
+                    "file_name": {
+                        "type": "string",
+                        "defaultValue": "yellow_tripdata"
                     }
                 },
                 "variables": {
@@ -277,7 +260,7 @@
                     }
                 },
                 "lastModifiedByObjectId": "1c20ea16-7932-4365-8a7b-ae3a559b1594",
-                "lastPublishTime": "2026-11-14T00:40:52Z"
+                "lastPublishTime": "2026-11-14T00:51:49Z"
             },
             "dependsOn": []
         }
