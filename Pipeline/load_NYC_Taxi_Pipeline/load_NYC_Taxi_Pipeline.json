@@ -1,0 +1,100 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "FabricDataPipelines user1fabric": {
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "load_NYC_Taxi_Pipeline",
+            "type": "pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "load_each_NYC_data_category",
+                        "type": "ForEach",
+                        "dependsOn": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@pipeline().parameters.category_parameters",
+                                "type": "Expression"
+                            },
+                            "isSequential": true,
+                            "activities": [
+                                {
+                                    "name": "invoke_load_NYC_Taxi_category",
+                                    "type": "InvokePipeline",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "0.12:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "typeProperties": {
+                                        "waitOnCompletion": true,
+                                        "operationType": "InvokeFabricPipeline",
+                                        "pipelineId": "10d8e409-5cb8-46c5-b884-9f0b9ae9c3ec",
+                                        "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                                        "parameters": {
+                                            "start_year": {
+                                                "value": "@item().start_year",
+                                                "type": "Expression"
+                                            },
+                                            "start_month": {
+                                                "value": "@item().start_month",
+                                                "type": "Expression"
+                                            },
+                                            "file_name": {
+                                                "value": "@item().file_name",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    },
+                                    "externalReferences": {
+                                        "connection": "[parameters('FabricDataPipelines user1fabric')]"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "parameters": {
+                    "category_parameters": {
+                        "type": "array",
+                        "defaultValue": [
+                            {
+                                "start_year": 2009,
+                                "start_month": 1,
+                                "file_name": "yellow_tripdata"
+                            },
+                            {
+                                "start_year": 2013,
+                                "start_month": 8,
+                                "file_name": "green_tripdata"
+                            },
+                            {
+                                "start_year": 2015,
+                                "start_month": 1,
+                                "file_name": "fhv_tripdata"
+                            },
+                            {
+                                "start_year": 2019,
+                                "start_month": 2,
+                                "file_name": "fhvhv_tripdata"
+                            }
+                        ]
+                    }
+                },
+                "lastModifiedByObjectId": "1c20ea16-7932-4365-8a7b-ae3a559b1594",
+                "lastPublishTime": "2026-11-14T13:18:56Z"
+            },
+            "dependsOn": []
+        }
+    ]
+}
