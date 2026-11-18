@@ -4,7 +4,7 @@ let
   #"Merged queries" = Table.NestedJoin(#"Added custom 1", {"sensors.id"}, get_loadedTo_days, {"sensors.id"}, "get_loadedTo_days", JoinKind.LeftOuter),
   #"Expanded get_loadedTo_days" = Table.ExpandTableColumn(#"Merged queries", "get_loadedTo_days", {"measurement.loadedTo"}, {"measurement.loadedTo"}),
   #"Added custom 2" = Table.AddColumn(#"Expanded get_loadedTo_days", "load_from", each [measurement.loadedTo], type nullable datetime),
-  #"Added custom 3" = Table.AddColumn(#"Added custom 2", "load_to", each if [load_from] <> null then Date.AddMonths([load_from], 3) else null, type nullable datetime),
+  #"Added custom 3" = Table.AddColumn(#"Added custom 2", "load_to", each if [load_from] <> null then Date.AddYears([load_from], 3) else null, type nullable datetime),
   Custom = Table.ToRecords(#"Added custom 3"),
   #"Custom 2" = List.Accumulate(
     Custom,
