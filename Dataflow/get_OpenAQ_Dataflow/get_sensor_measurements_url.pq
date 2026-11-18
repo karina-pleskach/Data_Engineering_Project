@@ -1,13 +1,14 @@
 (sensor_id as number, period as text, datetime_from as nullable text, datetime_to as nullable text) as text =>
 let
   date_params =
-    if datetime_from <> null and datetime_to <> null then
-      if period = "days" then
-        "date_from=" & Text.Start(datetime_from, 10) & "&date_to=" & Text.Start(datetime_to, 10) & "&"
-      else
-        "datetime_from=" & datetime_from & "&datetime_to=" & datetime_to & "&"
+    if period = "days" then
+      (if datetime_from <> null then"date_from=" & Text.Start(datetime_from, 10) & "&" else "")
+      &
+      (if datetime_to <> null then "date_to=" & Text.Start(datetime_to, 10) & "&" else "")
     else
-      "",
+      (if datetime_from <> null then "datetime_from=" & datetime_from & "&" else "")
+      &
+      (if datetime_to <> null then "datetime_to=" & datetime_to & "&" else ""),
   url = measurements_url & Number.ToText(sensor_id) & "/" & period & "?" & date_params
 in
   url

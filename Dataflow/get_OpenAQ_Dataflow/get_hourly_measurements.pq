@@ -4,7 +4,7 @@ let
   #"Merged queries" = Table.NestedJoin(#"Added custom 1", {"sensors.id"}, get_loadedTo_hours, {"sensors.id"}, "get_loadedTo_hours", JoinKind.LeftOuter),
   #"Expanded get_loadedTo_hours" = Table.ExpandTableColumn(#"Merged queries", "get_loadedTo_hours", {"measurement.loadedTo"}, {"measurement.loadedTo"}),
   #"Added custom 2" = Table.AddColumn(#"Expanded get_loadedTo_hours", "load_from", each [measurement.loadedTo], type nullable datetime),
-  #"Added custom 3" = Table.AddColumn(#"Added custom 2", "load_to", each if [load_from] <> null then Date.AddMonths([load_from], 3) else null, type nullable datetime),
+  #"Added custom 3" = Table.AddColumn(#"Added custom 2", "load_to", each null, type nullable datetime),
   Custom = Table.ToRecords(#"Added custom 3"),
   #"Custom 2" = List.Accumulate(
     Custom,
@@ -17,7 +17,7 @@ let
         records = List.Transform(measurements, (m) => Record.AddField(current, "measurement", m))
       in
         List.Combine({accumulated, records})),
-  #"Converted to table" = Table.FromList(#"Custom 2", Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+  #"Converted to table" = Table.FromList(#"Custom 2", Splitter.SplitByNothing(), {"Column1"}, null, ExtraValues.Error),
   #"Expanded Column1" = if Table.IsEmpty(#"Converted to table") then
       #table({"id", "name", "sensors.id", "sensors.name", "sensors.parameter.id", "sensors.parameter.name", "sensors.parameter.units", "sensors.parameter.displayName", "coordinates.latitude", "coordinates.longitude", "datetimeFirst.utc", "datetimeFirst.local", "datetimeLast.utc", "datetimeLast.local", "period", "measurement.loadedTo", "load_from", "load_to", "measurement"}, {})
     else
