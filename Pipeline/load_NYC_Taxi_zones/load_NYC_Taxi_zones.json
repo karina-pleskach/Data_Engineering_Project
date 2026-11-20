@@ -1,1 +1,152 @@
-{"$schema":"http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#","contentVersion":"1.0.0.0","parameters":{"NYC_Taxi_HTTP_Connection user1fabric":{"type":"string"},"Bronze_lakehouse":{"type":"string"}},"variables":{},"resources":[{"name":"load_NYC_Taxi_zones","type":"pipelines","apiVersion":"2018-06-01","properties":{"activities":[{"name":"load_NYC_Taxi_zones","type":"Copy","dependsOn":[],"policy":{"timeout":"0.12:00:00","retry":0,"retryIntervalInSeconds":30,"secureOutput":false,"secureInput":false},"typeProperties":{"source":{"type":"DelimitedTextSource","storeSettings":{"type":"HttpReadSettings","requestMethod":"GET"},"formatSettings":{"type":"DelimitedTextReadSettings"},"datasetSettings":{"annotations":[],"type":"DelimitedText","typeProperties":{"location":{"type":"HttpServerLocation","relativeUrl":"misc/taxi_zone_lookup.csv"},"columnDelimiter":",","escapeChar":"\\","firstRowAsHeader":true,"quoteChar":"\""},"schema":[],"externalReferences":{"connection":"[parameters('NYC_Taxi_HTTP_Connection user1fabric')]"}}},"sink":{"type":"LakehouseTableSink","tableActionOption":"OverwriteSchema","partitionOption":"None","applyVOrder":false,"enableTimestampNtz":false,"datasetSettings":{"annotations":[],"linkedService":{"name":"Bronze_lakehouse","properties":{"annotations":[],"type":"Lakehouse","typeProperties":{"workspaceId":"7267c3dd-58a1-43e7-8700-fdb441903273","artifactId":"[parameters('Bronze_lakehouse')]","rootFolder":"Tables"}}},"type":"LakehouseTable","schema":[],"typeProperties":{"schema":"dbo","table":"NYC_Taxi_zones"}}},"enableStaging":false,"translator":{"type":"TabularTranslator","mappings":[{"source":{"name":"LocationID","type":"String","physicalType":"String"},"sink":{"name":"LocationID","physicalType":"integer"}},{"source":{"name":"Borough","type":"String","physicalType":"String"},"sink":{"name":"Borough","physicalType":"string"}},{"source":{"name":"Zone","type":"String","physicalType":"String"},"sink":{"name":"Zone","physicalType":"string"}},{"source":{"name":"service_zone","type":"String","physicalType":"String"},"sink":{"name":"service_zone","physicalType":"string"}}],"typeConversion":true,"typeConversionSettings":{"allowDataTruncation":true,"treatBooleanAsNumber":false}}}}],"lastModifiedByObjectId":"1c20ea16-7932-4365-8a7b-ae3a559b1594","lastPublishTime":"2026-11-20T13:35:01Z"},"dependsOn":[]}]}
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "NYC_Taxi_HTTP_Connection user1fabric": {
+            "type": "string"
+        },
+        "Bronze_lakehouse": {
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "load_NYC_Taxi_zones",
+            "type": "pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "load_NYC_Taxi_zones",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "typeProperties": {
+                            "source": {
+                                "type": "DelimitedTextSource",
+                                "storeSettings": {
+                                    "type": "HttpReadSettings",
+                                    "requestMethod": "GET"
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextReadSettings"
+                                },
+                                "datasetSettings": {
+                                    "annotations": [],
+                                    "type": "DelimitedText",
+                                    "typeProperties": {
+                                        "location": {
+                                            "type": "HttpServerLocation",
+                                            "relativeUrl": "misc/taxi_zone_lookup.csv"
+                                        },
+                                        "columnDelimiter": ",",
+                                        "escapeChar": "\\",
+                                        "firstRowAsHeader": true,
+                                        "quoteChar": "\""
+                                    },
+                                    "schema": [],
+                                    "externalReferences": {
+                                        "connection": "[parameters('NYC_Taxi_HTTP_Connection user1fabric')]"
+                                    }
+                                }
+                            },
+                            "sink": {
+                                "type": "LakehouseTableSink",
+                                "tableActionOption": "OverwriteSchema",
+                                "partitionOption": "None",
+                                "applyVOrder": false,
+                                "enableTimestampNtz": false,
+                                "datasetSettings": {
+                                    "annotations": [],
+                                    "linkedService": {
+                                        "name": "Bronze_lakehouse",
+                                        "properties": {
+                                            "annotations": [],
+                                            "type": "Lakehouse",
+                                            "typeProperties": {
+                                                "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                                                "artifactId": "[parameters('Bronze_lakehouse')]",
+                                                "rootFolder": "Tables"
+                                            }
+                                        }
+                                    },
+                                    "type": "LakehouseTable",
+                                    "schema": [],
+                                    "typeProperties": {
+                                        "schema": "dbo",
+                                        "table": "NYC_Taxi_zones"
+                                    }
+                                }
+                            },
+                            "enableStaging": false,
+                            "translator": {
+                                "type": "TabularTranslator",
+                                "mappings": [
+                                    {
+                                        "source": {
+                                            "name": "LocationID",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "LocationID",
+                                            "physicalType": "integer"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "Borough",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "Borough",
+                                            "physicalType": "string"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "Zone",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "Zone",
+                                            "physicalType": "string"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "service_zone",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "service_zone",
+                                            "physicalType": "string"
+                                        }
+                                    }
+                                ],
+                                "typeConversion": true,
+                                "typeConversionSettings": {
+                                    "allowDataTruncation": true,
+                                    "treatBooleanAsNumber": false
+                                }
+                            }
+                        }
+                    }
+                ],
+                "lastModifiedByObjectId": "1c20ea16-7932-4365-8a7b-ae3a559b1594",
+                "lastPublishTime": "2026-11-20T13:35:01Z"
+            },
+            "dependsOn": []
+        }
+    ]
+}
