@@ -208,12 +208,35 @@
                                         "location": {
                                             "type": "LakehouseLocation",
                                             "fileName": "taxi_zones.zip",
-                                            "folderPath": "NYC_Taxi/zone"
+                                            "folderPath": "NYC_Taxi/taxi_zones"
                                         }
                                     }
                                 }
                             },
                             "enableStaging": false
+                        }
+                    },
+                    {
+                        "name": "extract_delete_taxi_zones",
+                        "type": "TridentNotebook",
+                        "dependsOn": [
+                            {
+                                "activity": "load_NYC_Taxi_zone_shapefile",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "typeProperties": {
+                            "notebookId": "07ad34c1-e97a-47ea-8710-dc1c5b426ec7",
+                            "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273"
                         }
                     }
                 ],
