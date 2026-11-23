@@ -1,0 +1,1 @@
+"https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?format=csvdata" meta [IsParameterQuery = true, IsParameterQueryRequired = false, Type = type text]
