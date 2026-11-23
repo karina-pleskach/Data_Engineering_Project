@@ -1,0 +1,3 @@
+dependencies:
+  - pip:
+      - apache-sedona==1.9.1
