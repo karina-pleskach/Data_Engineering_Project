@@ -1,0 +1,22 @@
+[
+    {
+        "start_year":2009,
+        "start_month":1,
+        "file_name":"yellow_tripdata"
+    },
+    {
+        "start_year":2013,
+        "start_month":8,
+        "file_name":"green_tripdata"
+    },
+    {
+        "start_year":2015,
+        "start_month":1,
+        "file_name":"fhv_tripdata"
+    },
+    {
+        "start_year":2019,
+        "start_month":2,
+        "file_name":"fhvhv_tripdata"
+    }
+]

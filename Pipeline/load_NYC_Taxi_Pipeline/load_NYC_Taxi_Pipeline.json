@@ -4,6 +4,15 @@
     "parameters": {
         "FabricDataPipelines user1fabric": {
             "type": "string"
+        },
+        "Bronze_lakehouse": {
+            "type": "string"
+        },
+        "NYC_Taxi_HTTP_Connection user1fabric": {
+            "type": "string"
+        },
+        "NYC_Taxi_Web_Connection user1fabric": {
+            "type": "string"
         }
     },
     "variables": {},
@@ -17,10 +26,17 @@
                     {
                         "name": "load_each_NYC_data_category",
                         "type": "ForEach",
-                        "dependsOn": [],
+                        "dependsOn": [
+                            {
+                                "activity": "lookup_category_parameters",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
                         "typeProperties": {
                             "items": {
-                                "value": "@pipeline().parameters.category_parameters",
+                                "value": "@activity('lookup_category_parameters').output.value",
                                 "type": "Expression"
                             },
                             "isSequential": true,
@@ -62,37 +78,339 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "name": "invoke_load_NYC_Taxi_zones",
+                        "type": "InvokePipeline",
+                        "dependsOn": [
+                            {
+                                "activity": "load_each_NYC_data_category",
+                                "dependencyConditions": [
+                                    "Completed"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "typeProperties": {
+                            "waitOnCompletion": true,
+                            "operationType": "InvokeFabricPipeline",
+                            "pipelineId": "e7eb9fa8-782a-41d7-a930-ec142c00c6f2",
+                            "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                            "parameters": {}
+                        },
+                        "externalReferences": {
+                            "connection": "[parameters('FabricDataPipelines user1fabric')]"
+                        }
+                    },
+                    {
+                        "name": "lookup_category_parameters",
+                        "type": "Lookup",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "typeProperties": {
+                            "source": {
+                                "type": "JsonSource",
+                                "storeSettings": {
+                                    "type": "LakehouseReadSettings",
+                                    "recursive": false,
+                                    "enablePartitionDiscovery": false
+                                },
+                                "formatSettings": {
+                                    "type": "JsonReadSettings"
+                                }
+                            },
+                            "firstRowOnly": false,
+                            "datasetSettings": {
+                                "annotations": [],
+                                "linkedService": {
+                                    "name": "Bronze_lakehouse",
+                                    "properties": {
+                                        "annotations": [],
+                                        "type": "Lakehouse",
+                                        "typeProperties": {
+                                            "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                                            "artifactId": "[parameters('Bronze_lakehouse')]",
+                                            "rootFolder": "Files"
+                                        }
+                                    }
+                                },
+                                "type": "Json",
+                                "typeProperties": {
+                                    "location": {
+                                        "type": "LakehouseLocation",
+                                        "fileName": "category_parameters.json",
+                                        "folderPath": "NYC_Taxi/config"
+                                    }
+                                },
+                                "schema": {}
+                            }
+                        }
+                    }
+                ],
+                "lastModifiedByObjectId": "1c20ea16-7932-4365-8a7b-ae3a559b1594",
+                "lastPublishTime": "2026-11-19T08:56:04Z"
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "load_NYC_Taxi_category",
+            "type": "pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "check_and_load_trips",
+                        "type": "ForEach",
+                        "dependsOn": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@range(\n    0,\n    add(\n        add(\n            sub(\n                mul(\n                    sub(\n                        int(formatDateTime(utcNow(), 'yyyy')),\n                        pipeline().parameters.start_year\n                    ),\n                    12\n                ),\n                pipeline().parameters.start_month\n            ),\n            int(formatDateTime(utcNow(), 'MM'))\n        ),\n        1\n    )\n)",
+                                "type": "Expression"
+                            },
+                            "isSequential": true,
+                            "activities": [
+                                {
+                                    "name": "set_current_year_month",
+                                    "type": "SetVariable",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "typeProperties": {
+                                        "variableName": "for_each_year_month",
+                                        "value": {
+                                            "value": "@formatDateTime(\n    addToTime(\n        concat(\n            string(pipeline().parameters.start_year),\n            '-',\n            if(\n                less(pipeline().parameters.start_month, 10),\n                concat('0', string(pipeline().parameters.start_month)),\n                string(pipeline().parameters.start_month)\n            ),\n            '-01T00:00:00Z'\n        ),\n        item(),\n        'Month'\n    ),\n    'yyyy-MM'\n)",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "check_file_existence",
+                                    "type": "GetMetadata",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "set_current_year_month",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "policy": {
+                                        "timeout": "0.12:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "typeProperties": {
+                                        "fieldList": [
+                                            "exists"
+                                        ],
+                                        "datasetSettings": {
+                                            "annotations": [],
+                                            "linkedService": {
+                                                "name": "Bronze_lakehouse",
+                                                "properties": {
+                                                    "annotations": [],
+                                                    "type": "Lakehouse",
+                                                    "typeProperties": {
+                                                        "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                                                        "artifactId": "[parameters('Bronze_lakehouse')]",
+                                                        "rootFolder": "Files"
+                                                    }
+                                                }
+                                            },
+                                            "type": "Parquet",
+                                            "typeProperties": {
+                                                "location": {
+                                                    "type": "LakehouseLocation",
+                                                    "fileName": {
+                                                        "value": "@concat(\n    pipeline().parameters.file_name, \n    '_', \n    variables('for_each_year_month'), \n    '.parquet'\n)",
+                                                        "type": "Expression"
+                                                    },
+                                                    "folderPath": {
+                                                        "value": "@concat(\n    'NYC_Taxi',\n    '/',\n    pipeline().parameters.file_name\n)",
+                                                        "type": "Expression"
+                                                    }
+                                                },
+                                                "compressionCodec": "snappy"
+                                            },
+                                            "schema": []
+                                        },
+                                        "storeSettings": {
+                                            "type": "AzureBlobStorageReadSettings",
+                                            "recursive": true,
+                                            "enablePartitionDiscovery": false
+                                        },
+                                        "formatSettings": {
+                                            "type": "ParquetReadSettings"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "load_data_if_not_exist",
+                                    "type": "IfCondition",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "pre_request",
+                                            "dependencyConditions": [
+                                                "Completed"
+                                            ]
+                                        }
+                                    ],
+                                    "typeProperties": {
+                                        "expression": {
+                                            "value": "@and(\n    equals(activity('check_file_existence').output.exists, false),\n    equals(activity('pre_request').output.ADFHttpStatusCodeInResponse, '206')\n)",
+                                            "type": "Expression"
+                                        },
+                                        "ifFalseActivities": [],
+                                        "ifTrueActivities": [
+                                            {
+                                                "name": "load_NYC_Taxi_data",
+                                                "type": "Copy",
+                                                "dependsOn": [],
+                                                "policy": {
+                                                    "timeout": "0.12:00:00",
+                                                    "retry": 0,
+                                                    "retryIntervalInSeconds": 30,
+                                                    "secureOutput": false,
+                                                    "secureInput": false
+                                                },
+                                                "typeProperties": {
+                                                    "source": {
+                                                        "type": "BinarySource",
+                                                        "storeSettings": {
+                                                            "type": "HttpReadSettings",
+                                                            "requestMethod": "GET"
+                                                        },
+                                                        "formatSettings": {
+                                                            "type": "BinaryReadSettings"
+                                                        },
+                                                        "datasetSettings": {
+                                                            "annotations": [],
+                                                            "type": "Binary",
+                                                            "typeProperties": {
+                                                                "location": {
+                                                                    "type": "HttpServerLocation",
+                                                                    "relativeUrl": {
+                                                                        "value": "@concat('/trip-data/', concat(pipeline().parameters.file_name, '_', variables('for_each_year_month'), '.parquet'))",
+                                                                        "type": "Expression"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "externalReferences": {
+                                                                "connection": "[parameters('NYC_Taxi_HTTP_Connection user1fabric')]"
+                                                            }
+                                                        }
+                                                    },
+                                                    "sink": {
+                                                        "type": "BinarySink",
+                                                        "storeSettings": {
+                                                            "type": "AzureBlobStorageWriteSettings"
+                                                        },
+                                                        "datasetSettings": {
+                                                            "annotations": [],
+                                                            "linkedService": {
+                                                                "name": "Bronze_lakehouse",
+                                                                "properties": {
+                                                                    "annotations": [],
+                                                                    "type": "Lakehouse",
+                                                                    "typeProperties": {
+                                                                        "workspaceId": "7267c3dd-58a1-43e7-8700-fdb441903273",
+                                                                        "artifactId": "[parameters('Bronze_lakehouse')]",
+                                                                        "rootFolder": "Files"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "type": "Binary",
+                                                            "typeProperties": {
+                                                                "location": {
+                                                                    "type": "LakehouseLocation",
+                                                                    "fileName": {
+                                                                        "value": "@concat(\n    pipeline().parameters.file_name,\n    '/',\n    pipeline().parameters.file_name,\n    '_', \n    variables('for_each_year_month'), \n    '.parquet'\n)",
+                                                                        "type": "Expression"
+                                                                    },
+                                                                    "folderPath": "NYC_Taxi"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "enableStaging": false
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "pre_request",
+                                    "type": "WebActivity",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "check_file_existence",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "policy": {
+                                        "timeout": "0.12:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "typeProperties": {
+                                        "method": "GET",
+                                        "headers": {
+                                            "Range": "bytes=0-0"
+                                        },
+                                        "relativeUrl": {
+                                            "value": "@concat(\n    pipeline().parameters.file_name,\n    '_',\n    variables('for_each_year_month'),\n    '.parquet'\n)",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "externalReferences": {
+                                        "connection": "[parameters('NYC_Taxi_Web_Connection user1fabric')]"
+                                    }
+                                }
+                            ]
+                        }
                     }
                 ],
                 "parameters": {
-                    "category_parameters": {
-                        "type": "array",
-                        "defaultValue": [
-                            {
-                                "start_year": 2009,
-                                "start_month": 1,
-                                "file_name": "yellow_tripdata"
-                            },
-                            {
-                                "start_year": 2013,
-                                "start_month": 8,
-                                "file_name": "green_tripdata"
-                            },
-                            {
-                                "start_year": 2015,
-                                "start_month": 1,
-                                "file_name": "fhv_tripdata"
-                            },
-                            {
-                                "start_year": 2019,
-                                "start_month": 2,
-                                "file_name": "fhvhv_tripdata"
-                            }
-                        ]
+                    "start_year": {
+                        "type": "int",
+                        "defaultValue": 2019
+                    },
+                    "start_month": {
+                        "type": "int",
+                        "defaultValue": 1
+                    },
+                    "file_name": {
+                        "type": "string",
+                        "defaultValue": "yellow_tripdata"
+                    }
+                },
+                "variables": {
+                    "for_each_year_month": {
+                        "type": "String"
                     }
                 },
                 "lastModifiedByObjectId": "1c20ea16-7932-4365-8a7b-ae3a559b1594",
-                "lastPublishTime": "2026-11-14T13:18:56Z"
+                "lastPublishTime": "2026-11-14T13:22:11Z"
             },
             "dependsOn": []
         }
