@@ -2,7 +2,7 @@ let
   Source = List.Numbers(1, num_of_pages{0}[number]),
   #"Converted to table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
   #"Changed column type" = Table.TransformColumnTypes(#"Converted to table", {{"Column1", type text}}),
-  #"Added custom" = Table.AddColumn(#"Changed column type", "Custom", each Json.Document(Web.Contents(base_url & "&page=" & [Column1]))),
+  #"Added custom" = Table.AddColumn(#"Changed column type", "Custom", each get_one_page([Column1])),
   #"Expanded Custom" = Table.ExpandListColumn(#"Added custom", "Custom"),
   #"Filtered rows" = Table.SelectRows(#"Expanded Custom", each Value.Is([Custom], type list)),
   #"Expanded Custom 1" = Table.ExpandListColumn(#"Filtered rows", "Custom"),

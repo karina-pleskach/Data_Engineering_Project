@@ -1,5 +1,5 @@
 let
-    Source = Json.Document(Web.Contents(base_url)),
+    Source = get_one_page("1"),
     Navigation = Source{0},
     Pages = Navigation[pages],
   #"Converted to table" = #table(1, {{Pages}}),
