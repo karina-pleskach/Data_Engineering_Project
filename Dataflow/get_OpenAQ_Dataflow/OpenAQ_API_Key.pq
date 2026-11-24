@@ -1,0 +1,1 @@
+"YOUR_OPENAQ_API_KEY" meta [IsParameterQuery = true, IsParameterQueryRequired = true, Type = type text]
