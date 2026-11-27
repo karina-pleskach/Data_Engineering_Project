@@ -29,3 +29,38 @@ CREATE TABLE [dbo].[DimTaxiType] (
 
 ALTER TABLE [dbo].[DimTaxiType]
 ADD CONSTRAINT [PK_DimTaxiType] PRIMARY KEY NONCLUSTERED ([taxi_type_id]) NOT ENFORCED;
+
+CREATE TABLE [dbo].[DimTime] (
+    [hour] SMALLINT NOT NULL,
+    [time_label] VARCHAR(5) NOT NULL,
+    [time_of_day] VARCHAR(20) NOT NULL
+);
+
+ALTER TABLE [dbo].[DimTime]
+ADD CONSTRAINT [PK_DimTime] PRIMARY KEY NONCLUSTERED ([hour]) NOT ENFORCED;
+
+INSERT INTO [dbo].[DimTime] ([hour], [time_label], [time_of_day])
+VALUES (0, '00:00', 'Night'),
+    (1, '01:00', 'Night'),
+    (2, '02:00', 'Night'),
+    (3, '03:00', 'Night'),
+    (4, '04:00', 'Night'),
+    (5, '05:00', 'Early morning'),
+    (6, '06:00', 'Early morning'),
+    (7, '07:00', 'Early morning'),
+    (8, '08:00', 'Morning'),
+    (9, '09:00', 'Morning'),
+    (10, '10:00', 'Morning'),
+    (11, '11:00', 'Morning'),
+    (12, '12:00', 'Afternoon'),
+    (13, '13:00', 'Afternoon'),
+    (14, '14:00', 'Afternoon'),
+    (15, '15:00', 'Afternoon'),
+    (16, '16:00', 'Afternoon'),
+    (17, '17:00', 'Evening'),
+    (18, '18:00', 'Evening'),
+    (19, '19:00', 'Evening'),
+    (20, '20:00', 'Late evening'),
+    (21, '21:00', 'Late evening'),
+    (22, '22:00', 'Late evening'),
+    (23, '23:00', 'Late evening');
