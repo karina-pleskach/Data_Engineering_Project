@@ -64,3 +64,22 @@ VALUES (0, '00:00', 'Night'),
     (21, '21:00', 'Late evening'),
     (22, '22:00', 'Late evening'),
     (23, '23:00', 'Late evening');
+
+CREATE TABLE [dbo].[FactTaxiDaily] (
+    [date] DATE NOT NULL,
+    [pickup_location_id] INT NOT NULL,
+    [dropoff_location_id] INT NOT NULL,
+    [taxi_type_id] SMALLINT NOT NULL,
+    [trip_count] BIGINT NOT NULL,
+    [total_distance] FLOAT,
+    [avg_trip_distance] FLOAT,
+    [total_fare] FLOAT,
+    [avg_fare] FLOAT,
+    [total_amount] FLOAT,
+    [avg_total_amount] FLOAT,
+    [total_tip] FLOAT,
+    [avg_tip] FLOAT
+);
+
+ALTER TABLE [dbo].[FactTaxiDaily]
+ADD CONSTRAINT [PK_FactTaxiDaily] PRIMARY KEY NONCLUSTERED ([date], [pickup_location_id], [dropoff_location_id], [taxi_type_id]) NOT ENFORCED;
