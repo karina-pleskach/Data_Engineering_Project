@@ -11,3 +11,21 @@ CREATE TABLE [dbo].[DimDate] (
 
 ALTER TABLE [dbo].[DimDate]
 ADD CONSTRAINT [PK_DimDate] PRIMARY KEY NONCLUSTERED ([date]) NOT ENFORCED;
+
+CREATE TABLE [dbo].[DimZone] (
+    [LocationID] INT NOT NULL,
+    [Borough] VARCHAR(50),
+    [Zone] VARCHAR(50),
+    [service_zone] VARCHAR(50)
+);
+
+ALTER TABLE [dbo].[DimZone]
+ADD CONSTRAINT [PK_DimZone] PRIMARY KEY NONCLUSTERED ([LocationID]) NOT ENFORCED;
+
+CREATE TABLE [dbo].[DimTaxiType] (
+    [taxi_type_id] SMALLINT NOT NULL,
+    [taxi_type] VARCHAR(10) NOT NULL
+);
+
+ALTER TABLE [dbo].[DimTaxiType]
+ADD CONSTRAINT [PK_DimTaxiType] PRIMARY KEY NONCLUSTERED ([taxi_type_id]) NOT ENFORCED;
