@@ -103,3 +103,13 @@ CREATE TABLE [dbo].[FactTaxiHourly] (
 
 ALTER TABLE [dbo].[FactTaxiHourly]
 ADD CONSTRAINT [PK_FactTaxiHourly] PRIMARY KEY NONCLUSTERED ([date], [hour], [pickup_location_id], [dropoff_location_id], [taxi_type_id]) NOT ENFORCED;
+
+CREATE TABLE [dbo].[DimAirQualityParameter] (
+    [parameter_id] INT NOT NULL,
+    [parameter_name] VARCHAR(50) NOT NULL,
+    [parameter_display_name] VARCHAR(50),
+    [parameter_units] VARCHAR(50)
+);
+
+ALTER TABLE [dbo].[DimAirQualityParameter]
+ADD CONSTRAINT [PK_DimAirQualityParameter] PRIMARY KEY NONCLUSTERED ([parameter_id]) NOT ENFORCED;

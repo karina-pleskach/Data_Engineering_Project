@@ -14,3 +14,7 @@ SELECT [date],
 FROM [dbo].[FactTaxiDaily]
 GROUP BY [date], [pickup_location_id], [dropoff_location_id], [taxi_type_id]
 HAVING COUNT(*) > 1;
+
+SELECT DISTINCT MONTH([date]) AS month, YEAR([date]) AS year
+FROM [dbo].[FactTaxiDaily]
+ORDER BY [year], [month];
